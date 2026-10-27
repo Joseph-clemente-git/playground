@@ -13,7 +13,7 @@ export const GAMES: GameManifest[] = [
   { slug: 'reversi', title: 'Reversi', icon: '⚪', category: 'board', orientation: 'portrait', players: 'vs-ai', controls: 'Tap a square', description: 'Flip discs to own the most of the board.' },
   { slug: 'battleship', title: 'Battleship', icon: '🚢', category: 'board', orientation: 'portrait', players: 'vs-ai', controls: 'Tap to fire', description: 'Hunt down the hidden fleet.' },
   // Puzzle
-  { slug: '2048', title: '2048', icon: '🔢', category: 'puzzle', orientation: 'portrait', players: '1', controls: 'Swipe to slide tiles', description: 'Merge tiles to reach 2048.' },
+  { slug: '2048', title: '2048', icon: '🔢', category: 'puzzle', orientation: 'portrait', players: '1', controls: 'Swipe or use the arrow keys', description: 'Merge tiles to reach 2048.', load: () => import('../games/2048') },
   { slug: 'minesweeper', title: 'Minesweeper', icon: '💣', category: 'puzzle', orientation: 'portrait', players: '1', controls: 'Tap to reveal, long-press to flag', description: 'Clear the field without hitting a mine.' },
   { slug: 'sudoku', title: 'Sudoku', icon: '🧩', category: 'puzzle', orientation: 'portrait', players: '1', controls: 'Tap a cell, then a number', description: 'Fill the grid so every row, column and box has 1–9.' },
   { slug: 'sliding-puzzle', title: 'Sliding Puzzle', icon: '🔲', category: 'puzzle', orientation: 'portrait', players: '1', controls: 'Tap or swipe a tile', description: 'Slide the tiles back into order.' },
