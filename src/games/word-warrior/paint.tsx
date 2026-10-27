@@ -26,6 +26,7 @@ export function Part({
   glint,
   depth = 8,
   line = LINE,
+  fromRight = false,
   children,
 }: {
   d: string
@@ -36,6 +37,8 @@ export function Part({
   /** How far the shadow reaches in from the lower right. */
   depth?: number
   line?: number
+  /** Light from the upper right instead of the upper left. */
+  fromRight?: boolean
   children?: ReactNode
 }) {
   const id = useSvgId()
@@ -46,7 +49,7 @@ export function Part({
       </clipPath>
       <g clipPath={`url(#${id})`}>
         <path d={d} fill={shade} />
-        <path d={d} fill={fill} transform={`translate(${-depth * 0.6} ${-depth})`} />
+        <path d={d} fill={fill} transform={`translate(${(fromRight ? 1 : -1) * depth * 0.6} ${-depth})`} />
         {children}
         {glint && <path d={glint} fill="#fff" opacity={0.42} />}
       </g>
