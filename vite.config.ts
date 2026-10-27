@@ -15,6 +15,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: false,
       workbox: {
+        // txt brings in the Word Warrior dictionary, so it plays offline.
+        globPatterns: ['**/*.{js,css,html,txt}'],
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,

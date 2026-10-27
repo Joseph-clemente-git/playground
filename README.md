@@ -10,6 +10,7 @@ npm run dev      # local dev server
 npm test         # unit tests
 npm run lint
 npm run build    # production build in dist/
+npm run words    # regenerate the Word Warrior dictionary from the word-list package
 ```
 
 ## How it fits together

@@ -32,6 +32,7 @@ export const GAMES: GameManifest[] = [
   { slug: 'word-guess', title: 'Word Guess', icon: '🟩', category: 'word', orientation: 'portrait', players: '1', controls: 'On-screen keyboard', description: 'Guess the five-letter word in six tries.' },
   { slug: 'hangman', title: 'Hangman', icon: '🪢', category: 'word', orientation: 'portrait', players: '1', controls: 'On-screen keyboard', description: 'Guess the word one letter at a time.' },
   { slug: 'word-search', title: 'Word Search', icon: '🔍', category: 'word', orientation: 'portrait', players: '1', controls: 'Drag across letters', description: 'Find every hidden word in the grid.' },
+  { slug: 'word-warrior', title: 'Word Warrior', icon: '📚', category: 'word', orientation: 'portrait', players: '1', controls: 'Tap letters to spell a word, then Attack', description: 'Spell words to battle monsters through a storybook.', load: () => import('../games/word-warrior') },
   { slug: 'word-scramble', title: 'Word Scramble', icon: '🔤', category: 'word', orientation: 'portrait', players: '1', controls: 'Tap letters in order', description: 'Unscramble the letters before time runs out.' },
   // Card
   { slug: 'memory-match', title: 'Memory Match', icon: '🃏', category: 'card', orientation: 'portrait', players: '1', controls: 'Tap two cards', description: 'Flip cards and find every pair.' },
