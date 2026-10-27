@@ -16,10 +16,11 @@ import {
 import type { Battle as BattleInfo } from './campaign'
 import { MIN_LETTERS } from './damage'
 import { hasAnyWord, type Dictionary } from './dictionary'
+import { EnemySprite } from './Enemies'
 import { Hero } from './Hero'
 import { SceneBackdrop } from './Scene'
 import { isLocked, wordOf, type Gem, type Tile as TileData } from './tiles'
-import { EnemyArt, GOLD, GroundShadow, OUTLINED, Ribbon, Sparkle, WOOD } from './ui'
+import { GOLD, GroundShadow, OUTLINED, Ribbon, Sparkle, WOOD } from './ui'
 
 /** Long enough to see your hit land before the enemy answers. */
 const ENEMY_DELAY_MS = 900
@@ -170,10 +171,10 @@ export function Battle({
           </Fighter>
           <FloatingNumber fx={state.heroFx} />
         </div>
-        <div className="absolute right-[60px] top-[258px] size-[240px]">
-          <GroundShadow className="absolute bottom-[-6px] left-[30px] h-[34px] w-[180px]" />
+        <div className={`absolute ${info.isBoss ? 'right-[24px] top-[210px] size-[300px]' : 'right-[40px] top-[234px] size-[270px]'}`}>
+          <GroundShadow className="absolute bottom-[-6px] left-[14%] h-[34px] w-[72%]" />
           <Fighter hit={state.enemyFx} lunge={enemyActed} toward={-1} defeated={state.phase === 'won'}>
-            <EnemyArt emoji={enemy.def.emoji} size={180} className="size-full" />
+            <EnemySprite enemy={enemy.def} className="size-full" />
           </Fighter>
           <FloatingNumber fx={state.enemyFx} />
         </div>
@@ -194,7 +195,7 @@ export function Battle({
               <Hero portrait className="size-full" />
             </Portrait>
             <Portrait>
-              <EnemyArt emoji={enemy.def.emoji} size={60} outlined={false} className="size-full" />
+              <EnemySprite enemy={enemy.def} portrait className="size-full" />
             </Portrait>
             <span
               className={`${OUTLINED} pointer-events-none absolute left-1/2 top-[44px] -translate-x-1/2 -rotate-6 text-[60px] leading-none text-ww-gold`}

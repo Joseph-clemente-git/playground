@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 /** A chunky wooden button: ink outline, a lit top edge and a shaded bottom one. */
 export const WOOD =
@@ -10,31 +10,6 @@ export const GOLD =
 
 /** Cream lettering with a thick ink outline, as on the battle header. */
 export const OUTLINED = 'text-outline font-display font-bold text-ww-cream'
-
-const INK_OUTLINE: CSSProperties = {
-  filter:
-    'drop-shadow(3px 0 0 #3b2414) drop-shadow(-3px 0 0 #3b2414) drop-shadow(0 3px 0 #3b2414) drop-shadow(0 -3px 0 #3b2414)',
-}
-
-/** An enemy emoji drawn like a sticker, outlined in ink to match the painted scenes. */
-export function EnemyArt({
-  emoji,
-  size,
-  outlined = true,
-  className = '',
-}: {
-  emoji: string
-  size: number
-  outlined?: boolean
-  className?: string
-}) {
-  return (
-    <span className={`grid place-items-center leading-none ${className}`} style={{ ...(outlined ? INK_OUTLINE : {}), fontSize: size }}>
-      {/* Turned to face the hero on the left. */}
-      <span className="[transform:scaleX(-1)]">{emoji}</span>
-    </span>
-  )
-}
 
 /** The soft shadow a fighter stands on. */
 export function GroundShadow({ className = '' }: { className?: string }) {

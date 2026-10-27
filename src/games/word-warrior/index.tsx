@@ -20,9 +20,10 @@ import {
   type Progress,
 } from './campaign'
 import { loadDictionary, type Dictionary } from './dictionary'
+import { EnemySprite } from './Enemies'
 import { Hero } from './Hero'
 import { SceneBackdrop } from './Scene'
-import { EnemyArt, GOLD, GroundShadow, OUTLINED, Ribbon, WOOD } from './ui'
+import { GOLD, GroundShadow, OUTLINED, Ribbon, WOOD } from './ui'
 
 const STORAGE_KEY = 'game-hub:word-warrior'
 
@@ -202,7 +203,11 @@ function BookMap({ progress, onFight, onReset }: { progress: Progress; onFight(i
                         boss ? 'size-[120px] text-[66px]' : 'size-[98px] text-[52px]'
                       } ${current ? 'animate-pulse' : ''} disabled:bg-[#5b4636] disabled:opacity-100`}
                     >
-                      {cleared || current ? enemy.emoji : <span className={`${OUTLINED} text-[44px] text-[#bba78a]`}>?</span>}
+                      {cleared || current ? (
+                        <EnemySprite enemy={enemy} portrait className="size-[86%] overflow-hidden rounded-full" />
+                      ) : (
+                        <span className={`${OUTLINED} text-[44px] text-[#bba78a]`}>?</span>
+                      )}
                       {cleared && (
                         <span className="absolute -right-2 -top-2 grid size-[42px] place-items-center rounded-full border-4 border-ww-ink bg-[#86cf4f] text-[24px] font-bold text-ww-ink">
                           ✓
@@ -290,7 +295,7 @@ function Result({
         </div>
         <div className="absolute right-[70px] top-[200px] size-[240px]">
           <GroundShadow className="absolute bottom-[-6px] left-[30px] h-[34px] w-[180px]" />
-          <EnemyArt emoji={info.enemy.emoji} size={180} className={`size-full ${result.won ? 'animate-defeat' : 'animate-bob'}`} />
+          <EnemySprite enemy={info.enemy} className={`size-full ${result.won ? 'animate-defeat' : 'animate-bob'}`} />
         </div>
       </div>
 
