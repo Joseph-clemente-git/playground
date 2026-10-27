@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #0b0b14;
+  --color-surface: #171726;
+  --color-accent: #a78bfa;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fredoka Variable', var(--font-sans);
+
+  --animate-rotate-to-landscape: rotate-to-landscape 2s ease-in-out infinite;
+  --animate-rotate-to-portrait: rotate-to-portrait 2s ease-in-out infinite;
+
+  @keyframes rotate-to-landscape {
+    0%, 20% { transform: rotate(0deg); }
+    60%, 100% { transform: rotate(-90deg); }
+  }
+  @keyframes rotate-to-portrait {
+    0%, 20% { transform: rotate(-90deg); }
+    60%, 100% { transform: rotate(0deg); }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-bg);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--color-bg);
+    color: white;
+    font-family: var(--font-sans);
+    /* No pull-to-refresh or scroll chaining. */
+    overscroll-behavior: none;
+  }
+
+  button,
+  a {
+    touch-action: manipulation;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
