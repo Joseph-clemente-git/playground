@@ -7,7 +7,7 @@ import type { GameManifest } from './types'
 export const GAMES: GameManifest[] = [
   // Board
   { slug: 'tic-tac-toe', title: 'Tic-Tac-Toe', icon: '❌', category: 'board', orientation: 'portrait', players: 'vs-ai', controls: 'Tap a square', description: 'Three in a row wins. Play a friend or the computer.', load: () => import('../games/tic-tac-toe') },
-  { slug: 'connect-four', title: 'Connect Four', icon: '🔴', category: 'board', orientation: 'portrait', players: 'vs-ai', controls: 'Tap a column', description: 'Drop discs and line up four before your opponent.' },
+  { slug: 'connect-four', title: 'Connect Four', icon: '🔴', category: 'board', orientation: 'portrait', players: 'vs-ai', controls: 'Tap a column', description: 'Drop discs and line up four before your opponent.', load: () => import('../games/connect-four') },
   { slug: 'checkers', title: 'Checkers', icon: '⚫', category: 'board', orientation: 'portrait', players: 'vs-ai', controls: 'Tap or drag a piece', description: 'Jump and capture every piece on the board.' },
   { slug: 'chess', title: 'Chess', icon: '♟️', category: 'board', orientation: 'portrait', players: '2-local', controls: 'Tap or drag a piece', description: 'The classic game of kings.' },
   { slug: 'reversi', title: 'Reversi', icon: '⚪', category: 'board', orientation: 'portrait', players: 'vs-ai', controls: 'Tap a square', description: 'Flip discs to own the most of the board.' },
