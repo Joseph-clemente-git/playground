@@ -1,0 +1,49 @@
+/* Slides take 110ms; spawns and merges start once the tiles land. */
+.g2048-tile {
+  transition: transform 110ms ease-in-out;
+}
+
+.g2048-new {
+  animation: g2048-appear 180ms ease-out 110ms backwards;
+}
+
+.g2048-merged {
+  animation: g2048-pop 180ms ease-out 110ms backwards;
+}
+
+.g2048-gain {
+  animation: g2048-rise 700ms ease-out forwards;
+}
+
+.g2048-overlay {
+  animation: g2048-fade 300ms ease-out 200ms backwards;
+}
+
+@keyframes g2048-appear {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes g2048-pop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes g2048-rise {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-60px); }
+}
+
+@keyframes g2048-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g2048-tile { transition: none; }
+  .g2048-new,
+  .g2048-merged,
+  .g2048-gain,
+  .g2048-overlay { animation: none; }
+}
