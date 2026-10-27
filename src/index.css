@@ -7,6 +7,15 @@
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Fredoka Variable', var(--font-sans);
 
+  /* Word Warrior's storybook palette. */
+  --color-ww-ink: #3b2414;
+  --color-ww-brown: #6b4a2e;
+  --color-ww-wood: #9a6539;
+  --color-ww-parchment: #f6ecd4;
+  --color-ww-parchment-dark: #e6d4ac;
+  --color-ww-cream: #fff6df;
+  --color-ww-gold: #f5c344;
+
   --animate-rotate-to-landscape: rotate-to-landscape 2s ease-in-out infinite;
   --animate-rotate-to-portrait: rotate-to-portrait 2s ease-in-out infinite;
   --animate-indeterminate: indeterminate 1.2s ease-in-out infinite;
@@ -115,4 +124,10 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Chunky storybook lettering: the stroke sits behind the fill. Set --outline-color to recolour it. */
+@utility text-outline {
+  -webkit-text-stroke: 0.16em var(--outline-color, var(--color-ww-ink));
+  paint-order: stroke fill;
 }

@@ -1,9 +1,11 @@
 import { MAX_POTIONS, type EnemyDef, type Perks, type PotionKind, type Potions } from './battle'
 
+export type SceneName = 'cellar' | 'library' | 'tower'
+
 export interface Chapter {
   title: string
-  /** Tailwind gradient behind the battle scene. */
-  scene: string
+  /** Which painted backdrop the chapter's battles are fought in front of. */
+  scene: SceneName
   /** Four battles, then the boss. */
   enemies: EnemyDef[]
   /** One themed bonus word per battle. */
@@ -15,7 +17,7 @@ export const BATTLES_PER_CHAPTER = 5
 export const CHAPTERS: Chapter[] = [
   {
     title: 'The Cellar',
-    scene: 'from-stone-700 via-stone-800 to-stone-950',
+    scene: 'cellar',
     bonus: ['candle', 'barrel', 'cheese', 'ladder', 'basket'],
     enemies: [
       { name: 'Rat', emoji: '🐀', hp: 16, attack: 2, verb: 'bites', abilities: [] },
@@ -37,7 +39,7 @@ export const CHAPTERS: Chapter[] = [
   },
   {
     title: 'The Haunted Library',
-    scene: 'from-indigo-800 via-violet-950 to-slate-950',
+    scene: 'library',
     bonus: ['story', 'scroll', 'reader', 'novel', 'quill'],
     enemies: [
       { name: 'Ghost', emoji: '👻', hp: 30, attack: 4, verb: 'chills you', abilities: [{ kind: 'weaken', chance: 0.3 }] },
@@ -59,7 +61,7 @@ export const CHAPTERS: Chapter[] = [
   },
   {
     title: 'The Dragon’s Tower',
-    scene: 'from-orange-800 via-red-950 to-zinc-950',
+    scene: 'tower',
     bonus: ['sword', 'shield', 'castle', 'flame', 'dragon'],
     enemies: [
       { name: 'Goblin', emoji: '👺', hp: 44, attack: 6, verb: 'stabs', abilities: [{ kind: 'lock', chance: 0.3 }] },

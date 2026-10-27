@@ -21,11 +21,22 @@ import {
 } from './campaign'
 import { loadDictionary, type Dictionary } from './dictionary'
 import { Hero } from './Hero'
+import { SceneBackdrop } from './Scene'
+import { EnemyArt, GOLD, GroundShadow, OUTLINED, Ribbon, WOOD } from './ui'
 
 const STORAGE_KEY = 'game-hub:word-warrior'
 
 const POTION_ICONS = { health: '❤️', purity: '💧', power: '⚡' } as const
 const POTION_NAMES = { health: 'Health', purity: 'Purity', power: 'Power' } as const
+
+const TIPS = [
+  'Long words hit much harder than short ones, and leave gems behind.',
+  'Rare letters like J, K, X, Z and Qu are worth more damage.',
+  'Spell a gem tile to use it: Emeralds heal you and Sapphires freeze the enemy.',
+  'Drinking a potion doesn’t cost your turn.',
+  'Use burning tiles before they burn out, or they’ll scorch you.',
+  'When the enemy is charging up, a Sapphire stops the blow.',
+]
 
 type Screen =
   | { name: 'map' }
@@ -92,25 +103,21 @@ export default function WordWarrior({ onScore, onGameOver }: GameProps) {
 
   if (!dictionary) {
     return (
-      <Panel>
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-          <Hero className="size-[260px] animate-bob" />
+      <Parchment>
+        <div className="flex flex-1 flex-col items-center justify-center gap-10 text-center">
+          <Hero className="size-[280px] animate-bob" />
           {loadFailed ? (
             <>
-              <p className="text-[34px] text-white/80">Couldn’t open the dictionary.</p>
-              <button
-                type="button"
-                onClick={() => setLoadFailed(false)}
-                className="h-[104px] rounded-full bg-white px-14 text-[34px] font-semibold text-bg active:scale-[0.97]"
-              >
+              <p className="font-display text-[36px] font-semibold text-ww-brown">Couldn’t open the dictionary.</p>
+              <button type="button" onClick={() => setLoadFailed(false)} className={`${GOLD} h-[104px] rounded-full px-14 font-display text-[36px] font-bold`}>
                 Try again
               </button>
             </>
           ) : (
-            <p className="animate-pulse font-display text-[40px] font-semibold text-white/80">Opening the book…</p>
+            <p className={`${OUTLINED} animate-pulse text-[48px]`}>Opening the book…</p>
           )}
         </div>
-      </Panel>
+      </Parchment>
     )
   }
 
@@ -142,8 +149,13 @@ export default function WordWarrior({ onScore, onGameOver }: GameProps) {
   return <BookMap progress={progress} onFight={fight} onReset={() => setProgress(newProgress())} />
 }
 
-function Panel({ children }: { children: ReactNode }) {
-  return <div className="flex size-full flex-col rounded-[48px] bg-surface/80 px-10 py-10 ring-2 ring-white/5">{children}</div>
+/** The cream page every non-battle screen sits on. */
+function Parchment({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex size-full flex-col overflow-hidden rounded-[44px] border-[6px] border-ww-ink bg-ww-parchment px-9 py-9 shadow-[inset_0_0_0_10px_rgba(230,212,172,0.7)]">
+      {children}
+    </div>
+  )
 }
 
 function BookMap({ progress, onFight, onReset }: { progress: Progress; onFight(index: number): void; onReset(): void }) {
@@ -153,25 +165,27 @@ function BookMap({ progress, onFight, onReset }: { progress: Progress; onFight(i
   const next = finished ? null : battleAt(progress.cleared)
 
   return (
-    <Panel>
-      <div className="flex items-center gap-6">
-        <Hero className="size-[150px] shrink-0" />
+    <Parchment>
+      <div className="flex items-center gap-5">
+        <Hero className="size-[150px] shrink-0 animate-bob" />
         <div>
-          <h2 className="font-display text-[64px] font-bold leading-none text-white">Word Warrior</h2>
-          <p className="mt-2 text-[28px] text-white/60">Spell words to fight your way through the book.</p>
+          <h2 className={`${OUTLINED} text-[70px] leading-none text-ww-gold`}>Word Warrior</h2>
+          <p className="mt-3 font-display text-[28px] font-medium leading-snug text-ww-brown">Spell words to fight your way through the book!</p>
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-5">
+      <div className="mt-7 flex flex-col gap-5">
         {CHAPTERS.map((chapter, chapterIndex) => {
           const first = chapterIndex * BATTLES_PER_CHAPTER
           const open = progress.cleared >= first
           return (
-            <section key={chapter.title} className={`rounded-[36px] bg-gradient-to-br ${chapter.scene} p-6 ring-2 ring-white/10 ${open ? '' : 'opacity-50'}`}>
-              <h3 className="font-display text-[34px] font-semibold text-white">
-                <span className="text-white/50">Chapter {chapterIndex + 1}</span> · {chapter.title}
+            <section key={chapter.title} className="relative h-[214px] overflow-hidden rounded-[32px] border-[5px] border-ww-ink shadow-[0_6px_0_rgba(59,36,20,0.3)]">
+              <SceneBackdrop scene={chapter.scene} className={`absolute inset-0 size-full ${open ? '' : 'grayscale-[0.7]'}`} />
+              <div className="absolute inset-0 bg-gradient-to-b from-ww-ink/45 via-transparent to-ww-ink/50" />
+              <h3 className={`${OUTLINED} absolute left-5 top-3 text-[32px]`}>
+                <span className="text-ww-gold">{chapterIndex + 1}.</span> {chapter.title}
               </h3>
-              <div className="mt-4 flex items-center justify-between">
+              <div className="absolute inset-x-4 bottom-4 flex items-end justify-between">
                 {chapter.enemies.map((enemy, place) => {
                   const index = first + place
                   const cleared = index < progress.cleared
@@ -184,13 +198,13 @@ function BookMap({ progress, onFight, onReset }: { progress: Progress; onFight(i
                       disabled={!cleared && !current}
                       onClick={() => onFight(index)}
                       aria-label={cleared ? `Replay ${enemy.name}` : current ? `Fight ${enemy.name}` : 'Locked battle'}
-                      className={`relative grid place-items-center rounded-full bg-black/35 ring-4 transition active:scale-95 ${
-                        boss ? 'size-[124px] text-[72px]' : 'size-[100px] text-[56px]'
-                      } ${current ? 'animate-pulse ring-amber-300' : cleared ? 'ring-emerald-400/70' : 'ring-white/10'}`}
+                      className={`relative grid place-items-center rounded-full ${current ? GOLD : WOOD} ${
+                        boss ? 'size-[120px] text-[66px]' : 'size-[98px] text-[52px]'
+                      } ${current ? 'animate-pulse' : ''} disabled:bg-[#5b4636] disabled:opacity-100`}
                     >
-                      {cleared || current ? enemy.emoji : <span className="text-[40px] text-white/40">?</span>}
+                      {cleared || current ? enemy.emoji : <span className={`${OUTLINED} text-[44px] text-[#bba78a]`}>?</span>}
                       {cleared && (
-                        <span className="absolute -right-1 -top-1 grid size-[40px] place-items-center rounded-full bg-emerald-400 text-[24px] font-bold text-emerald-950">
+                        <span className="absolute -right-2 -top-2 grid size-[42px] place-items-center rounded-full border-4 border-ww-ink bg-[#86cf4f] text-[24px] font-bold text-ww-ink">
                           ✓
                         </span>
                       )}
@@ -203,34 +217,30 @@ function BookMap({ progress, onFight, onReset }: { progress: Progress; onFight(i
         })}
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-4 rounded-[32px] bg-black/25 px-6 py-4">
-        <div className="flex gap-5 text-[30px] font-semibold text-white/85">
+      <div className="mt-6 flex items-center justify-between gap-4 rounded-[28px] border-[5px] border-ww-ink/15 bg-ww-parchment-dark px-6 py-3">
+        <div className="flex gap-5 font-display text-[32px] font-bold text-ww-brown">
           {(['health', 'purity', 'power'] as const).map((kind) => (
             <span key={kind} aria-label={`${progress.potions[kind]} ${POTION_NAMES[kind]} potions`}>
               {POTION_ICONS[kind]} {progress.potions[kind]}
             </span>
           ))}
         </div>
-        <div className="flex gap-3 text-[40px]">
+        <div className="flex gap-3 text-[42px]">
           {TREASURES.map((treasure) => (
-            <span key={treasure.id} title={`${treasure.name}: ${treasure.description}`} className={owned.includes(treasure.id) ? '' : 'opacity-20 grayscale'}>
+            <span key={treasure.id} title={`${treasure.name}: ${treasure.description}`} className={owned.includes(treasure.id) ? '' : 'opacity-25 grayscale'}>
               {treasure.icon}
             </span>
           ))}
         </div>
       </div>
 
-      <div className="mt-auto flex flex-col gap-4">
+      <div className="mt-auto flex flex-col gap-3">
         {next ? (
-          <button
-            type="button"
-            onClick={() => onFight(next.index)}
-            className="h-[112px] rounded-full bg-white text-[36px] font-bold text-bg shadow-[0_0_48px_rgba(167,139,250,0.45)] active:scale-[0.97]"
-          >
-            {progress.cleared === 0 ? 'Begin the adventure' : `Fight the ${next.enemy.name}`}
+          <button type="button" onClick={() => onFight(next.index)} className={`${GOLD} h-[112px] rounded-full font-display text-[38px] font-bold`}>
+            {progress.cleared === 0 ? 'Begin the adventure!' : `Fight the ${next.enemy.name}!`}
           </button>
         ) : (
-          <p className="text-center font-display text-[36px] font-semibold text-amber-200">🏆 The book is finished! Replay any battle.</p>
+          <p className={`${OUTLINED} text-center text-[38px] text-ww-gold`}>🏆 The book is finished! Replay any battle.</p>
         )}
         <button
           type="button"
@@ -240,12 +250,12 @@ function BookMap({ progress, onFight, onReset }: { progress: Progress; onFight(i
             setConfirmReset(false)
           }}
           onBlur={() => setConfirmReset(false)}
-          className="h-[72px] text-[26px] font-medium text-white/50 active:text-white/80"
+          className="h-[64px] font-display text-[26px] font-semibold text-ww-brown/70 active:text-ww-brown"
         >
           {confirmReset ? 'Tap again to erase your progress' : 'Start a new book'}
         </button>
       </div>
-    </Panel>
+    </Parchment>
   )
 }
 
@@ -271,22 +281,42 @@ function Result({
   const canGoOn = result.won && !isFinished(after)
 
   return (
-    <Panel>
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-        <span className={`text-[180px] leading-none ${result.won ? 'opacity-40 grayscale' : 'animate-bob'}`}>{info.enemy.emoji}</span>
-        <h2 className={`font-display text-[84px] font-bold leading-none ${result.won ? 'text-amber-200' : 'text-rose-300'}`}>
-          {finishedNow ? 'The End!' : result.won ? 'Victory!' : 'Defeated…'}
-        </h2>
-        <p className="max-w-[560px] text-[32px] text-white/70">
+    <div className="relative size-full overflow-hidden rounded-[44px] border-[6px] border-ww-ink bg-ww-parchment">
+      <div className="absolute inset-x-0 top-0 h-[520px] overflow-hidden">
+        <SceneBackdrop scene={info.chapter.scene} className="absolute inset-0 size-full" />
+        <div className="absolute left-[70px] top-[190px] size-[250px]">
+          <GroundShadow className="absolute bottom-[-4px] left-[30px] h-[34px] w-[190px]" />
+          <Hero className={`size-full ${result.won ? 'animate-bob' : 'animate-defeat'}`} />
+        </div>
+        <div className="absolute right-[70px] top-[200px] size-[240px]">
+          <GroundShadow className="absolute bottom-[-6px] left-[30px] h-[34px] w-[180px]" />
+          <EnemyArt emoji={info.enemy.emoji} size={180} className={`size-full ${result.won ? 'animate-defeat' : 'animate-bob'}`} />
+        </div>
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 top-[488px] flex flex-col rounded-t-[40px] border-t-[6px] border-ww-ink bg-ww-parchment px-8 pb-7 pt-[86px] shadow-[0_-8px_0_rgba(59,36,20,0.2)]">
+        <Ribbon className="absolute left-1/2 top-[-56px] h-[112px] w-[480px] -translate-x-1/2">
+          <h2 className={`${OUTLINED} animate-pop-in text-[68px] leading-none ${result.won ? 'text-ww-gold' : 'text-[#ffa2a2]'}`}>
+            {finishedNow ? 'The End!' : result.won ? 'Victory!' : 'Defeated…'}
+          </h2>
+        </Ribbon>
+
+        <p className="text-center font-display text-[32px] font-medium leading-snug text-ww-brown">
           {finishedNow
             ? 'The Dragon is beaten and the book is finished. Well spelled, Word Warrior!'
             : result.won
-              ? `You beat the ${info.enemy.name}.`
+              ? `You beat the ${info.enemy.name}!`
               : `The ${info.enemy.name} got the better of you. Try again at full health.`}
         </p>
 
+        {!result.won && (
+          <div className="mt-6">
+            <Reward icon="💡" title="Tip" detail={TIPS[(index + before.cleared + state.tick) % TIPS.length]} />
+          </div>
+        )}
+
         {result.won && (
-          <div className="flex w-full flex-col gap-4">
+          <div className="mt-6 flex flex-col gap-4">
             {state.bonus.found && (
               <Reward icon={POTION_ICONS[state.bonus.reward]} title={`Bonus word: ${state.bonus.word.toUpperCase()}`} detail={`+1 ${POTION_NAMES[state.bonus.reward]} potion`} />
             )}
@@ -300,45 +330,41 @@ function Result({
             )}
           </div>
         )}
-      </div>
 
-      <div className="grid grid-cols-2 gap-5">
-        <button
-          type="button"
-          onClick={onMap}
-          className="h-[104px] rounded-full bg-white/10 text-[34px] font-semibold text-white/85 ring-1 ring-white/10 active:scale-[0.97]"
-        >
-          📖 Map
-        </button>
-        {result.won ? (
-          <button
-            type="button"
-            onClick={() => (canGoOn ? onNext(after.cleared) : onMap())}
-            className="h-[104px] animate-pop-in rounded-full bg-white text-[34px] font-semibold text-bg shadow-[0_0_48px_rgba(167,139,250,0.55)] active:scale-[0.97]"
-          >
-            {canGoOn ? 'Next battle' : 'Done'}
+        <div className="mt-auto grid grid-cols-2 gap-5">
+          <button type="button" onClick={onMap} className={`${WOOD} h-[104px] rounded-full`}>
+            <span className={`${OUTLINED} text-[34px]`}>📖 Map</span>
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onNext(index)}
-            className="h-[104px] animate-pop-in rounded-full bg-white text-[34px] font-semibold text-bg shadow-[0_0_48px_rgba(167,139,250,0.55)] active:scale-[0.97]"
-          >
-            Try again
-          </button>
-        )}
+          {result.won ? (
+            <button
+              type="button"
+              onClick={() => (canGoOn ? onNext(after.cleared) : onMap())}
+              className={`${GOLD} h-[104px] animate-pop-in rounded-full font-display text-[36px] font-bold`}
+            >
+              {canGoOn ? 'Next battle' : 'Done'}
+            </button>
+          ) : (
+            <button type="button" onClick={() => onNext(index)} className={`${GOLD} h-[104px] animate-pop-in rounded-full font-display text-[36px] font-bold`}>
+              Try again
+            </button>
+          )}
+        </div>
       </div>
-    </Panel>
+    </div>
   )
 }
 
 function Reward({ icon, title, detail, highlight = false }: { icon: string; title: string; detail: string; highlight?: boolean }) {
   return (
-    <div className={`flex animate-pop-in items-center gap-5 rounded-[28px] px-6 py-4 text-left ${highlight ? 'bg-amber-400/15 ring-2 ring-amber-300/60' : 'bg-black/25'}`}>
-      <span className="text-[56px]">{icon}</span>
+    <div
+      className={`flex animate-pop-in items-center gap-5 rounded-[26px] border-[5px] px-6 py-3 text-left ${
+        highlight ? 'border-ww-ink bg-[#fde7a8] shadow-[0_0_28px_rgba(245,195,68,0.7)]' : 'border-ww-ink/15 bg-ww-parchment-dark'
+      }`}
+    >
+      <span className="text-[52px]">{icon}</span>
       <div>
-        <p className="text-[30px] font-semibold text-white">{title}</p>
-        <p className="text-[24px] text-white/60">{detail}</p>
+        <p className="font-display text-[30px] font-bold text-ww-ink">{title}</p>
+        <p className="text-[24px] font-medium text-ww-brown">{detail}</p>
       </div>
     </div>
   )

@@ -17,26 +17,38 @@ import type { Battle as BattleInfo } from './campaign'
 import { MIN_LETTERS } from './damage'
 import { hasAnyWord, type Dictionary } from './dictionary'
 import { Hero } from './Hero'
+import { SceneBackdrop } from './Scene'
 import { isLocked, wordOf, type Gem, type Tile as TileData } from './tiles'
+import { EnemyArt, GOLD, GroundShadow, OUTLINED, Ribbon, Sparkle, WOOD } from './ui'
 
 /** Long enough to see your hit land before the enemy answers. */
 const ENEMY_DELAY_MS = 900
 /** Time to watch the final blow before the result screen. */
 const RESULT_DELAY_MS = 1300
 const FREE_SCRAMBLE_DELAY_MS = 900
+/** Empty sockets shown in the word bar, so it reads as slots to fill. */
+const WORD_SOCKETS = 7
 
-const POTIONS: { kind: PotionKind; icon: string; name: string; fill: string }[] = [
-  { kind: 'health', icon: '❤️', name: 'Health potion', fill: 'bg-rose-500/25 ring-rose-400/50' },
-  { kind: 'purity', icon: '💧', name: 'Purity potion', fill: 'bg-sky-500/25 ring-sky-400/50' },
-  { kind: 'power', icon: '⚡', name: 'Power potion', fill: 'bg-amber-500/25 ring-amber-400/50' },
+const POTIONS: { kind: PotionKind; icon: string; name: string }[] = [
+  { kind: 'health', icon: '❤️', name: 'Health potion' },
+  { kind: 'purity', icon: '💧', name: 'Purity potion' },
+  { kind: 'power', icon: '⚡', name: 'Power potion' },
 ]
 
-const GEM_STYLE: Record<Gem, string> = {
-  amethyst: 'bg-violet-400 text-violet-950 shadow-[0_0_24px_rgba(167,139,250,0.7)]',
-  emerald: 'bg-emerald-400 text-emerald-950 shadow-[0_0_24px_rgba(52,211,153,0.7)]',
-  sapphire: 'bg-sky-400 text-sky-950 shadow-[0_0_24px_rgba(56,189,248,0.7)]',
-  ruby: 'bg-rose-500 text-white shadow-[0_0_24px_rgba(244,63,94,0.7)]',
-  diamond: 'bg-cyan-50 text-cyan-900 shadow-[0_0_32px_rgba(165,243,252,0.9)]',
+const GEM_FILL: Record<Gem, string> = {
+  amethyst: 'bg-[#b48cf2]',
+  emerald: 'bg-[#5cc98a]',
+  sapphire: 'bg-[#5aa9e6]',
+  ruby: 'bg-[#e8556a]',
+  diamond: 'bg-[#dff7ff]',
+}
+
+const GEM_GLOW: Record<Gem, string> = {
+  amethyst: 'shadow-[0_0_26px_rgba(180,140,242,0.9)]',
+  emerald: 'shadow-[0_0_26px_rgba(92,201,138,0.9)]',
+  sapphire: 'shadow-[0_0_26px_rgba(90,169,230,0.9)]',
+  ruby: 'shadow-[0_0_26px_rgba(232,85,106,0.9)]',
+  diamond: 'shadow-[0_0_32px_rgba(200,245,255,1)]',
 }
 
 export interface BattleResult {
@@ -45,6 +57,10 @@ export interface BattleResult {
   state: BattleState
 }
 
+/**
+ * Drawn on the 720×1280 stage: a painted scene with the "VS" header on top,
+ * and a parchment panel holding the word, the letter grid and the actions below.
+ */
 export function Battle({
   info,
   setup,
@@ -140,191 +156,221 @@ export function Battle({
   }, [])
 
   const { hero, enemy } = state
-  const over = state.phase === 'won' || state.phase === 'lost'
 
   return (
-    <div className="flex size-full flex-col justify-between rounded-[48px] bg-surface/80 px-8 py-7 ring-2 ring-white/5">
-      <div className="flex h-[64px] items-center gap-4">
-        <button
-          type="button"
-          onClick={onMap}
-          className="flex h-[64px] items-center gap-2 rounded-full bg-white/10 px-6 text-[26px] font-semibold text-white/85 active:scale-[0.97]"
-        >
-          📖 Map
-        </button>
-        <p className="min-w-0 flex-1 truncate text-[24px] font-medium text-white/60">
-          Ch. {info.chapterIndex + 1} · {info.isBoss ? 'Boss' : `Battle ${info.place + 1} of 5`}
-        </p>
-        <div
-          className={`flex h-[64px] items-center gap-2 rounded-full px-5 text-[24px] font-semibold ring-2 ${
-            state.bonus.found ? 'bg-emerald-500/20 text-emerald-300 ring-emerald-400/40' : 'bg-black/30 text-amber-200 ring-amber-300/30'
-          }`}
-        >
-          <span className="text-white/55">Bonus</span>
-          <span className={`tracking-wider uppercase ${state.bonus.found ? 'line-through' : ''}`}>{state.bonus.word}</span>
-          {state.bonus.found && '✓'}
-        </div>
-      </div>
+    <div className="relative size-full overflow-hidden rounded-[44px] border-[6px] border-ww-ink bg-ww-parchment">
+      {/* The painted battle scene */}
+      <div className="absolute inset-x-0 top-0 h-[580px] overflow-hidden">
+        <SceneBackdrop scene={info.chapter.scene} className="absolute inset-0 size-full" />
 
-      <div className={`relative h-[350px] overflow-hidden rounded-[36px] bg-gradient-to-b ${info.chapter.scene} ring-2 ring-white/10`}>
-        <div className="absolute inset-x-0 bottom-[64px] h-[70px] bg-black/25" aria-hidden />
-
-        <div className="absolute left-6 top-5 w-[280px]">
-          <HealthBar name="You" hp={hero.hp} max={hero.maxHp} color="bg-emerald-400" />
-          <Statuses>
-            {hero.poison && <Chip>☠️ Poisoned {hero.poison.turns}</Chip>}
-            {hero.weak > 0 && <Chip>💤 Weak {hero.weak}</Chip>}
-            {hero.powered && <Chip>⚡ Powered</Chip>}
-          </Statuses>
-        </div>
-        <div className="absolute right-6 top-5 w-[280px]">
-          <HealthBar name={enemy.def.name} hp={enemy.hp} max={enemy.maxHp} color="bg-rose-500" align="right" />
-          <Statuses align="right">
-            {enemy.shield > 0 && <Chip>🛡️ Shield {enemy.shield}</Chip>}
-            {enemy.frozen && <Chip>❄️ Frozen</Chip>}
-            {enemy.burn && <Chip>🔥 Burning {enemy.burn.turns}</Chip>}
-            {enemy.charging && <Chip>💢 Charging</Chip>}
-          </Statuses>
-        </div>
-
-        <div className="absolute bottom-[78px] left-[40px] size-[190px]">
+        <div className="absolute left-[60px] top-[248px] size-[250px]">
+          <GroundShadow className="absolute bottom-[-4px] left-[30px] h-[34px] w-[190px]" />
           <Fighter hit={state.heroFx} lunge={heroActed} toward={1} defeated={state.phase === 'lost'}>
-            <Hero className="size-full drop-shadow-[0_12px_12px_rgba(0,0,0,0.45)]" />
+            <Hero className="size-full" />
           </Fighter>
           <FloatingNumber fx={state.heroFx} />
         </div>
-        <div className="absolute bottom-[78px] right-[40px] size-[190px]">
+        <div className="absolute right-[60px] top-[258px] size-[240px]">
+          <GroundShadow className="absolute bottom-[-6px] left-[30px] h-[34px] w-[180px]" />
           <Fighter hit={state.enemyFx} lunge={enemyActed} toward={-1} defeated={state.phase === 'won'}>
-            <span className="grid size-full place-items-center text-[150px] leading-none drop-shadow-[0_12px_12px_rgba(0,0,0,0.45)] [transform:scaleX(-1)]">
-              {enemy.def.emoji}
-            </span>
+            <EnemyArt emoji={enemy.def.emoji} size={180} className="size-full" />
           </Fighter>
           <FloatingNumber fx={state.enemyFx} />
         </div>
 
-        <p
-          aria-live="polite"
-          className="absolute inset-x-0 bottom-0 flex h-[64px] items-center justify-center bg-black/45 px-6 text-center text-[24px] font-medium leading-tight text-white/90"
+        <header>
+          <div className="absolute left-4 top-3 w-[250px]">
+            <p className={`${OUTLINED} truncate pl-2 text-[34px] leading-tight`}>You</p>
+            <HealthBar hp={hero.hp} max={hero.maxHp} fill="bg-[#86cf4f]" />
+            <Statuses>
+              {hero.poison && <StatusIcon icon="☠️" count={hero.poison.turns} tint="bg-[#8d6bb5]" label="Poisoned" />}
+              {hero.weak > 0 && <StatusIcon icon="💤" count={hero.weak} tint="bg-[#7d8aa0]" label="Weakened" />}
+              {hero.powered && <StatusIcon icon="⚡" tint="bg-[#e7a93b]" label="Powered up" />}
+            </Statuses>
+          </div>
+
+          <div className="absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-3">
+            <Portrait>
+              <Hero portrait className="size-full" />
+            </Portrait>
+            <Portrait>
+              <EnemyArt emoji={enemy.def.emoji} size={60} outlined={false} className="size-full" />
+            </Portrait>
+            <span
+              className={`${OUTLINED} pointer-events-none absolute left-1/2 top-[44px] -translate-x-1/2 -rotate-6 text-[60px] leading-none text-ww-gold`}
+              aria-hidden
+            >
+              VS
+            </span>
+          </div>
+
+          <div className="absolute right-4 top-3 w-[250px]">
+            <p className={`${OUTLINED} truncate pr-2 text-right text-[34px] leading-tight`}>{enemy.def.name}</p>
+            <HealthBar hp={enemy.hp} max={enemy.maxHp} fill="bg-[#ef6b6b]" />
+            <Statuses align="right">
+              {enemy.shield > 0 && <StatusIcon icon="🛡️" count={enemy.shield} tint="bg-[#6aa86a]" label="Shielded" />}
+              {enemy.frozen && <StatusIcon icon="❄️" tint="bg-[#5aa9e6]" label="Frozen" />}
+              {enemy.burn && <StatusIcon icon="🔥" count={enemy.burn.turns} tint="bg-[#e8743a]" label="Burning" />}
+              {enemy.charging && <StatusIcon icon="💢" tint="bg-[#d94c4c]" label="Charging a big hit" />}
+            </Statuses>
+          </div>
+        </header>
+
+        <button
+          type="button"
+          onClick={onMap}
+          aria-label="Back to the map"
+          className={`${WOOD} absolute left-4 top-[178px] grid size-[72px] place-items-center rounded-[22px] text-[34px]`}
         >
-          {state.message}
-        </p>
+          📖
+        </button>
+        <div className="absolute right-4 top-[178px] flex flex-col items-end gap-2">
+          <div
+            className={`flex h-[60px] items-center gap-2 rounded-[20px] border-[5px] border-ww-ink px-4 text-[24px] font-bold ${
+              state.bonus.found ? 'bg-[#bfe6a6] text-[#245a1d]' : 'bg-ww-parchment text-ww-brown'
+            }`}
+          >
+            <span className="font-semibold opacity-70">Bonus</span>
+            <span className={`tracking-wider uppercase ${state.bonus.found ? 'line-through' : ''}`}>{state.bonus.word}</span>
+            {state.bonus.found && '✓'}
+          </div>
+          <span className={`${OUTLINED} pr-1 text-[24px]`}>
+            Chapter {info.chapterIndex + 1} · {info.isBoss ? 'Boss' : `Battle ${info.place + 1}/5`}
+          </span>
+        </div>
       </div>
 
-      <div
-        className={`flex h-[100px] items-center gap-3 rounded-[32px] bg-black/30 pl-4 pr-3 ring-4 transition ${
-          valid ? 'ring-emerald-400/70' : word.length >= MIN_LETTERS ? 'ring-rose-400/40' : 'ring-transparent'
-        }`}
-      >
-        <div className="flex min-w-0 flex-1 gap-1 overflow-hidden">
-          {selected.length === 0 ? (
-            <span className="pl-3 text-[28px] text-white/40">{playerTurn ? 'Tap letters to spell a word' : over ? '' : 'Enemy’s turn…'}</span>
-          ) : (
-            selected.map((index, at) => (
+      {/* The parchment panel */}
+      <div className="absolute inset-x-0 bottom-0 top-[548px] flex flex-col gap-3 rounded-t-[40px] border-t-[6px] border-ww-ink bg-ww-parchment px-6 pb-4 pt-[44px] shadow-[0_-8px_0_rgba(59,36,20,0.2)]">
+        <Ribbon className="absolute left-1/2 top-[-36px] h-[72px] w-[540px] -translate-x-1/2">
+          <p aria-live="polite" className="line-clamp-2 font-display text-[24px] font-semibold leading-tight text-ww-brown">
+            {state.message}
+          </p>
+        </Ribbon>
+
+        <div
+          className={`flex h-[92px] shrink-0 items-center gap-3 rounded-[30px] border-[5px] bg-ww-parchment-dark px-3 transition ${
+            valid ? 'border-[#4f9a3a] shadow-[0_0_20px_rgba(110,190,80,0.6)]' : word.length >= MIN_LETTERS ? 'border-[#c0504d]/70' : 'border-ww-ink/15'
+          }`}
+        >
+          <div
+            className={`relative grid size-[66px] shrink-0 place-items-center rounded-[18px] border-[5px] border-ww-ink text-[32px] ${
+              valid ? 'bg-gradient-to-br from-[#f7a65a] to-[#d9532f]' : 'bg-[#c9b48c]'
+            }`}
+            aria-label={selected.length > 0 ? `${damage} damage` : undefined}
+          >
+            <span className={valid ? '' : 'opacity-50 grayscale'}>⚔️</span>
+            {selected.length > 0 && <span className={`${OUTLINED} absolute -bottom-3 -right-3 text-[30px] leading-none`}>{damage}</span>}
+          </div>
+
+          <div className="flex min-w-0 flex-1 items-center gap-[6px]">
+            {selected.map((index, at) => (
               <button
                 key={state.grid[index].id}
                 type="button"
                 onClick={() => setSelected(selected.slice(0, at))}
                 aria-label={`Remove ${state.grid[index].letter.toUpperCase()} and after`}
-                className={`grid h-[68px] min-w-[52px] shrink place-items-center rounded-[14px] px-1 font-display text-[38px] font-bold capitalize leading-none ${tileColor(state.grid[index])}`}
+                className={`${OUTLINED} grid aspect-square min-w-0 shrink basis-[56px] place-items-center rounded-full border-4 border-ww-ink text-[26px] capitalize leading-none ${letterFill(state.grid[index])}`}
               >
                 {state.grid[index].letter}
               </button>
-            ))
-          )}
-        </div>
-        {selected.length > 0 && (
-          <>
-            <span className={`shrink-0 font-display text-[34px] font-bold ${valid ? 'text-emerald-300' : 'text-white/40'}`}>
-              ⚔️ {damage}
-            </span>
-            <button
-              type="button"
-              onClick={() => setSelected([])}
-              aria-label="Clear word"
-              className="grid size-[64px] shrink-0 place-items-center rounded-full bg-white/10 text-[30px] text-white/80 active:scale-95"
-            >
+            ))}
+            {Array.from({ length: Math.max(0, WORD_SOCKETS - selected.length) }, (_, i) => (
+              <span key={i} className="grid aspect-square min-w-0 shrink basis-[56px] place-items-center rounded-full bg-ww-parchment text-ww-parchment-dark" aria-hidden>
+                <Sparkle className="size-[24px]" />
+              </span>
+            ))}
+          </div>
+
+          {selected.length > 0 && (
+            <button type="button" onClick={() => setSelected([])} aria-label="Clear word" className={`${WOOD} grid size-[58px] shrink-0 place-items-center rounded-full text-[24px]`}>
               ✕
             </button>
-          </>
-        )}
-      </div>
+          )}
+        </div>
 
-      <div className="mx-auto grid w-[508px] grid-cols-4 gap-3">
-        {state.grid.map((tile, index) => (
-          // The dark slot shows through while its tile is in the word.
-          <div key={index} className="aspect-square rounded-[24px] bg-black/30 ring-2 ring-inset ring-white/10">
-            <TileButton
-              // A tile that fell remounts so its drop animation plays.
-              key={state.fall[index] > 0 ? `${tile.id}:${state.tick}` : tile.id}
-              tile={tile}
-              fall={state.fall[index]}
-              picked={selected.includes(index)}
-              disabled={!playerTurn}
-              onClick={() => toggle(index)}
-            />
-          </div>
-        ))}
-      </div>
+        <div className="mx-auto grid w-[446px] shrink-0 grid-cols-4 gap-[10px]">
+          {state.grid.map((tile, index) => (
+            // The socket shows through while its tile is in the word.
+            <div key={index} className="relative grid aspect-square place-items-center rounded-[26px] bg-ww-parchment-dark text-[#d2bd92] shadow-[inset_0_5px_0_rgba(59,36,20,0.14)]">
+              <Sparkle className="absolute size-[30px]" />
+              <TileButton
+                // A tile that fell remounts so its drop animation plays.
+                key={state.fall[index] > 0 ? `${tile.id}:${state.tick}` : tile.id}
+                tile={tile}
+                fall={state.fall[index]}
+                picked={selected.includes(index)}
+                disabled={!playerTurn}
+                onClick={() => toggle(index)}
+              />
+            </div>
+          ))}
+        </div>
 
-      <div className="flex h-[100px] gap-3">
-        {POTIONS.map(({ kind, icon, name, fill }) => (
-          <button
-            key={kind}
-            type="button"
-            onClick={() => drink(kind)}
-            disabled={!canDrink(state, kind)}
-            aria-label={`${name}, ${state.potions[kind]} left`}
-            className={`relative grid w-[88px] shrink-0 place-items-center rounded-[28px] text-[44px] ring-2 transition active:scale-95 disabled:opacity-35 ${fill}`}
-          >
-            {icon}
-            <span className="absolute -right-1 -top-1 grid size-[38px] place-items-center rounded-full bg-bg text-[22px] font-bold text-white ring-2 ring-white/20">
-              {state.potions[kind]}
-            </span>
+        <div className="mt-auto flex h-[92px] shrink-0 gap-3">
+          {POTIONS.map(({ kind, icon, name }) => (
+            <button
+              key={kind}
+              type="button"
+              onClick={() => drink(kind)}
+              disabled={!canDrink(state, kind)}
+              aria-label={`${name}, ${state.potions[kind]} left`}
+              className={`${WOOD} relative grid w-[86px] shrink-0 place-items-center rounded-full text-[38px]`}
+            >
+              {icon}
+              <span className="absolute -right-2 -top-2 grid size-[36px] place-items-center rounded-full border-4 border-ww-ink bg-ww-cream text-[20px] font-bold text-ww-ink">
+                {state.potions[kind]}
+              </span>
+            </button>
+          ))}
+          <button type="button" onClick={shuffle} disabled={!playerTurn} className={`${WOOD} flex-1 rounded-full`}>
+            <span className={`${OUTLINED} text-[28px]`}>Scramble</span>
           </button>
-        ))}
-        <button
-          type="button"
-          onClick={shuffle}
-          disabled={!playerTurn}
-          className="flex-1 rounded-full bg-white/10 text-[28px] font-semibold text-white/85 ring-1 ring-white/10 active:scale-[0.97] disabled:opacity-40"
-        >
-          Scramble
-        </button>
-        <button
-          type="button"
-          onClick={attack}
-          disabled={!playerTurn || !valid}
-          className="flex-[1.3] rounded-full bg-white text-[32px] font-bold text-bg transition active:scale-[0.97] disabled:bg-white/20 disabled:text-white/40"
-        >
-          ⚔️ Attack
-        </button>
+          <button type="button" onClick={attack} disabled={!playerTurn || !valid} className={`${GOLD} flex-[1.25] rounded-full font-display text-[34px] font-bold`}>
+            {state.phase === 'enemy' ? 'Wait…' : 'Attack!'}
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
-function HealthBar({ name, hp, max, color, align = 'left' }: { name: string; hp: number; max: number; color: string; align?: 'left' | 'right' }) {
+function HealthBar({ hp, max, fill }: { hp: number; max: number; fill: string }) {
   return (
-    <div className={align === 'right' ? 'text-right' : ''}>
-      <div className={`flex items-baseline justify-between gap-3 ${align === 'right' ? 'flex-row-reverse' : ''}`}>
-        <span className="truncate font-display text-[30px] font-semibold text-white">{name}</span>
-        <span className="text-[24px] font-semibold tabular-nums text-white/75">
-          {hp}/{max}
-        </span>
+    <div className="relative mt-1 h-[42px] overflow-hidden rounded-full border-[5px] border-ww-ink bg-[#4a3526]">
+      <div className={`h-full rounded-full transition-[width] duration-500 ${fill}`} style={{ width: `${(hp / max) * 100}%` }}>
+        <div className="mx-3 mt-[4px] h-[7px] rounded-full bg-white/40" />
       </div>
-      <div className={`mt-1 flex h-[22px] overflow-hidden rounded-full bg-black/45 ring-2 ring-black/30 ${align === 'right' ? 'justify-end' : ''}`}>
-        <div className={`h-full rounded-full transition-[width] duration-500 ${color}`} style={{ width: `${(hp / max) * 100}%` }} />
-      </div>
+      <span className={`${OUTLINED} absolute inset-0 grid place-items-center text-[24px] leading-none tabular-nums`}>
+        {hp}/{max}
+      </span>
+    </div>
+  )
+}
+
+function Portrait({ children }: { children: ReactNode }) {
+  return (
+    <div className="size-[92px] overflow-hidden rounded-[24px] border-[5px] border-ww-ink bg-gradient-to-b from-[#fde7a8] to-[#f2c66a] shadow-[inset_0_-6px_0_rgba(140,80,0,0.25),0_5px_0_rgba(59,36,20,0.35)]">
+      {children}
     </div>
   )
 }
 
 function Statuses({ children, align = 'left' }: { children: ReactNode; align?: 'left' | 'right' }) {
-  return <div className={`mt-2 flex flex-wrap gap-2 ${align === 'right' ? 'justify-end' : ''}`}>{children}</div>
+  return <div className={`mt-2 flex gap-2 ${align === 'right' ? 'justify-end' : ''}`}>{children}</div>
 }
 
-function Chip({ children }: { children: ReactNode }) {
-  return <span className="animate-pop-in rounded-full bg-black/45 px-3 py-1 text-[20px] font-semibold text-white/90">{children}</span>
+function StatusIcon({ icon, count, tint, label }: { icon: string; count?: number; tint: string; label: string }) {
+  return (
+    <span
+      title={label}
+      aria-label={count ? `${label}, ${count} turns` : label}
+      className={`relative grid size-[50px] animate-pop-in place-items-center rounded-[14px] border-4 border-ww-ink text-[26px] shadow-[inset_0_-4px_0_rgba(0,0,0,0.2)] ${tint}`}
+    >
+      {icon}
+      {count !== undefined && <span className={`${OUTLINED} absolute -bottom-2 -right-2 text-[22px] leading-none`}>{count}</span>}
+    </span>
+  )
 }
 
 /** Lunges when it acts, shakes when it's hit, and slumps when beaten. */
@@ -359,8 +405,8 @@ function FloatingNumber({ fx }: { fx: Fx | null }) {
     <span
       key={fx.key}
       aria-hidden
-      className={`pointer-events-none absolute inset-x-0 top-[-10px] animate-float-up text-center font-display text-[64px] font-bold [text-shadow:0_4px_0_rgba(0,0,0,0.5)] ${
-        fx.kind === 'heal' ? 'text-emerald-300' : 'text-amber-200'
+      className={`text-outline pointer-events-none absolute inset-x-0 top-[-30px] animate-float-up text-center font-display text-[80px] font-bold ${
+        fx.kind === 'heal' ? 'text-[#b9f29a] [--outline-color:#1f5a1f]' : 'text-[#ffa2a2] [--outline-color:#6b1d1d]'
       }`}
     >
       {fx.kind === 'heal' ? '+' : '−'}
@@ -369,21 +415,36 @@ function FloatingNumber({ fx }: { fx: Fx | null }) {
   )
 }
 
-function Badge({ children }: { children: ReactNode }) {
-  return (
-    <span className="absolute -right-2 -top-2 rounded-full bg-bg px-2 py-0.5 font-sans text-[20px] font-bold text-white ring-2 ring-white/25">
-      {children}
-    </span>
-  )
+/** Fill for a tile, shared by the grid and the word bar. */
+function tileFill(tile: TileData) {
+  const hazard = tile.hazard?.kind
+  if (hazard === 'locked') return 'bg-[#8f8b85]'
+  if (hazard === 'burning') return 'bg-[#f08a3c]'
+  if (hazard === 'smashed') return 'bg-[#b89a7a]'
+  if (tile.gem) return GEM_FILL[tile.gem]
+  return 'bg-ww-wood'
+}
+
+/** A Diamond is pale, so its letter flips to ink on a white outline. */
+function letterFill(tile: TileData) {
+  return `${tileFill(tile)} ${tile.gem === 'diamond' ? 'text-ww-ink [--outline-color:#fff]' : 'text-ww-cream'}`
 }
 
 function tileColor(tile: TileData) {
   const hazard = tile.hazard?.kind
-  if (hazard === 'locked') return 'bg-slate-600 text-slate-900 shadow-[inset_0_0_0_6px_rgba(15,23,42,0.5)]'
-  if (hazard === 'burning') return 'animate-flicker bg-orange-400 text-orange-950 shadow-[0_0_28px_rgba(251,146,60,0.7)]'
-  if (hazard === 'smashed') return 'bg-[#bfae86] text-[#3b2a14]/45'
-  if (tile.gem) return GEM_STYLE[tile.gem]
-  return 'bg-[#f3e6c4] text-[#3b2a14]'
+  if (hazard === 'locked') return `${tileFill(tile)} text-[#cfcac2]`
+  if (hazard === 'burning') return `${tileFill(tile)} animate-flicker text-ww-cream shadow-[0_0_28px_rgba(255,140,60,0.85)]`
+  if (hazard === 'smashed') return `${tileFill(tile)} text-ww-cream/70`
+  if (tile.gem) return `${letterFill(tile)} ${GEM_GLOW[tile.gem]}`
+  return `${tileFill(tile)} text-ww-cream`
+}
+
+function Badge({ children }: { children: ReactNode }) {
+  return (
+    <span className="absolute -right-3 -top-3 rounded-full border-4 border-ww-ink bg-ww-cream px-2 font-sans text-[20px] font-bold leading-[28px] text-ww-ink [-webkit-text-stroke:0]">
+      {children}
+    </span>
+  )
 }
 
 function TileButton({
@@ -416,22 +477,25 @@ function TileButton({
       disabled={disabled || hazard?.kind === 'locked'}
       aria-label={label}
       aria-pressed={picked}
-      className={`relative grid size-full place-items-center rounded-[24px] font-display text-[68px] font-bold capitalize leading-none shadow-[inset_0_-8px_0_rgba(0,0,0,0.22)] transition-[transform,opacity] duration-150 active:scale-95 ${tileColor(tile)} ${
+      className={`text-outline relative grid size-full place-items-center rounded-[26px] border-[5px] border-ww-ink font-display text-[58px] font-bold capitalize leading-none shadow-[inset_0_-8px_0_rgba(0,0,0,0.25),inset_0_5px_0_rgba(255,255,255,0.22)] transition-[transform,opacity] duration-150 active:scale-95 ${tileColor(tile)} ${
         picked ? 'scale-75 opacity-0' : ''
       } ${fall > 0 ? 'animate-drop' : ''}`}
       style={{ '--fall': fall } as CSSProperties}
     >
       {tile.letter}
-      {tile.gem && !hazard && <span className="absolute right-3 top-2 text-[22px] opacity-70">◆</span>}
+      {tile.gem && !hazard && <span className="absolute right-2 top-1 text-[22px] text-white [-webkit-text-stroke:0]">◆</span>}
       {hazard?.kind === 'locked' && (
-        <Badge>🔒{hazard.turns}</Badge>
+        <>
+          <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" aria-hidden>
+            <path d="M8 30 L92 70 M8 70 L92 30" stroke="#5d5a55" strokeWidth="9" strokeDasharray="14 6" />
+          </svg>
+          <Badge>🔒{hazard.turns}</Badge>
+        </>
       )}
-      {hazard?.kind === 'burning' && (
-        <Badge>🔥{hazard.turns}</Badge>
-      )}
+      {hazard?.kind === 'burning' && <Badge>🔥{hazard.turns}</Badge>}
       {hazard?.kind === 'smashed' && (
         <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" aria-hidden>
-          <path d="M18 22 L44 46 L36 58 L64 80 M44 46 L70 34 L84 18" stroke="#3b2a14" strokeOpacity="0.55" strokeWidth="4" fill="none" strokeLinejoin="round" />
+          <path d="M18 22 L44 46 L36 58 L64 80 M44 46 L70 34 L84 18" stroke="#3b2414" strokeWidth="5" fill="none" strokeLinejoin="round" />
         </svg>
       )}
     </button>
