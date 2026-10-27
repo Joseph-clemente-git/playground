@@ -164,7 +164,7 @@ export function Battle({
       <div className="absolute inset-x-0 top-0 h-[580px] overflow-hidden">
         <SceneBackdrop scene={info.chapter.scene} className="absolute inset-0 size-full" />
 
-        <div className="absolute left-[64px] top-[204px] size-[300px]">
+        <div className="absolute left-[56px] top-[172px] size-[344px]">
           <GroundShadow className="absolute bottom-[-2px] left-[22%] h-[34px] w-[58%]" />
           <Fighter hit={state.heroFx} lunge={heroActed} toward={1} defeated={state.phase === 'lost'}>
             <Hero className="size-full" />

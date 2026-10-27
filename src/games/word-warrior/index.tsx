@@ -289,7 +289,7 @@ function Result({
     <div className="relative size-full overflow-hidden rounded-[44px] border-[6px] border-ww-ink bg-ww-parchment">
       <div className="absolute inset-x-0 top-0 h-[520px] overflow-hidden">
         <SceneBackdrop scene={info.chapter.scene} className="absolute inset-0 size-full" />
-        <div className="absolute left-[44px] top-[140px] size-[300px]">
+        <div className="absolute left-[40px] top-[112px] size-[340px]">
           <GroundShadow className="absolute bottom-[-2px] left-[22%] h-[34px] w-[58%]" />
           <Hero className={`size-full ${result.won ? 'animate-bob' : 'animate-defeat'}`} />
         </div>
