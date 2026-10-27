@@ -10,7 +10,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // The new service worker takes over as soon as it is installed; src/pwa/updates.ts
+      // registers it, keeps checking for new versions and picks when to reload.
       registerType: 'autoUpdate',
+      injectRegister: false,
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+      },
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Game Hub',
